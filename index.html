@@ -30,62 +30,101 @@
             <div id="options" class="d-grid gap-2"></div>
             <p id="result" class="mt-3"></p>
             <button id="next-btn" class="btn btn-primary hidden">Next Question</button>
+            <button id="stop-btn" class="btn btn-danger mt-3">Stop Quiz</button>
         </div>
     </div>
     
     <script>
-        const questions = [
-            { question: "What is the full form of CPU?", options: ["Central Processing Unit", "Central Program Unit", "Central Performance Unit"], answer: "Central Processing Unit" },
-            { question: "Which key is used to refresh a webpage?", options: ["F5", "Ctrl + R", "Both A and B"], answer: "Both A and B" },
-            { question: "What is the shortcut for 'Copy' in Windows?", options: ["Ctrl + C", "Ctrl + V", "Ctrl + X"], answer: "Ctrl + C" }
-        ];
-        
+        let questions = [];
         let currentQuestionIndex = 0;
-        let score = 0;
-        
         const questionText = document.getElementById("question-text");
         const optionsContainer = document.getElementById("options");
         const resultText = document.getElementById("result");
         const nextButton = document.getElementById("next-btn");
-        
+        const stopButton = document.getElementById("stop-btn");
+
+        // Function to fetch questions from an online source
+        async function fetchQuestions() {
+            try {
+                const response = await fetch("https://opentdb.com/api.php?amount=50&category=18&type=multiple");
+                const data = await response.json();
+                questions = data.results.map(q => ({
+                    question: q.question,
+                    options: shuffleArray([...q.incorrect_answers, q.correct_answer]),
+                    answer: q.correct_answer
+                }));
+                loadQuestion();
+            } catch (error) {
+                questionText.textContent = "Error fetching questions. Please try again.";
+            }
+        }
+
+        // Function to shuffle an array (Fisher-Yates Algorithm)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
         function loadQuestion() {
-            const question = questions[currentQuestionIndex];
-            questionText.textContent = question.question;
-            optionsContainer.innerHTML = "";
+            if (questions.length === 0) {
+                questionText.textContent = "Loading new questions...";
+                fetchQuestions();
+                return;
+            }
+
             resultText.textContent = "";
-            
+            resultText.classList.remove("text-success", "text-danger");
+            optionsContainer.innerHTML = "";
+
+            const question = questions[currentQuestionIndex];
+            questionText.innerHTML = question.question;
+
             question.options.forEach(option => {
                 const button = document.createElement("button");
                 button.classList.add("btn", "btn-outline-primary");
                 button.textContent = option;
-                button.onclick = () => checkAnswer(option);
+                button.onclick = () => checkAnswer(option, button);
                 optionsContainer.appendChild(button);
             });
+
+            nextButton.classList.add("hidden");
         }
-        
-        function checkAnswer(selectedOption) {
+
+        function checkAnswer(selectedOption, button) {
             const correctAnswer = questions[currentQuestionIndex].answer;
             if (selectedOption === correctAnswer) {
                 resultText.textContent = "Correct! 🎉";
                 resultText.classList.add("text-success");
-                score++;
             } else {
                 resultText.textContent = "Wrong! ❌ The correct answer was: " + correctAnswer;
                 resultText.classList.add("text-danger");
             }
             nextButton.classList.remove("hidden");
+            document.querySelectorAll("#options button").forEach(btn => btn.disabled = true);
         }
-        
+
         nextButton.addEventListener("click", () => {
             currentQuestionIndex++;
             if (currentQuestionIndex >= questions.length) {
+                fetchQuestions();
                 currentQuestionIndex = 0;
+            } else {
+                loadQuestion();
             }
-            loadQuestion();
-            nextButton.classList.add("hidden");
         });
-        
-        loadQuestion();
+
+        stopButton.addEventListener("click", () => {
+            questionText.textContent = "Quiz stopped. Refresh the page to play again!";
+            optionsContainer.innerHTML = "";
+            nextButton.classList.add("hidden");
+            stopButton.classList.add("hidden");
+        });
+
+        fetchQuestions();
     </script>
 </body>
 </html>
+
