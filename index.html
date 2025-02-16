@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loksewa Quiz Game</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .quiz-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container text-center">
+        <div class="quiz-container" id="quiz-box">
+            <h2 class="mb-4">Loksewa Quiz Game</h2>
+            <p id="question-text"></p>
+            <div id="options" class="d-grid gap-2"></div>
+            <p id="result" class="mt-3"></p>
+            <button id="next-btn" class="btn btn-primary hidden">Next Question</button>
+        </div>
+    </div>
+    
+    <script>
+        const questions = [
+            { question: "What is the full form of CPU?", options: ["Central Processing Unit", "Central Program Unit", "Central Performance Unit"], answer: "Central Processing Unit" },
+            { question: "Which key is used to refresh a webpage?", options: ["F5", "Ctrl + R", "Both A and B"], answer: "Both A and B" },
+            { question: "What is the shortcut for 'Copy' in Windows?", options: ["Ctrl + C", "Ctrl + V", "Ctrl + X"], answer: "Ctrl + C" }
+        ];
+        
+        let currentQuestionIndex = 0;
+        let score = 0;
+        
+        const questionText = document.getElementById("question-text");
+        const optionsContainer = document.getElementById("options");
+        const resultText = document.getElementById("result");
+        const nextButton = document.getElementById("next-btn");
+        
+        function loadQuestion() {
+            const question = questions[currentQuestionIndex];
+            questionText.textContent = question.question;
+            optionsContainer.innerHTML = "";
+            resultText.textContent = "";
+            
+            question.options.forEach(option => {
+                const button = document.createElement("button");
+                button.classList.add("btn", "btn-outline-primary");
+                button.textContent = option;
+                button.onclick = () => checkAnswer(option);
+                optionsContainer.appendChild(button);
+            });
+        }
+        
+        function checkAnswer(selectedOption) {
+            const correctAnswer = questions[currentQuestionIndex].answer;
+            if (selectedOption === correctAnswer) {
+                resultText.textContent = "Correct! 🎉";
+                resultText.classList.add("text-success");
+                score++;
+            } else {
+                resultText.textContent = "Wrong! ❌ The correct answer was: " + correctAnswer;
+                resultText.classList.add("text-danger");
+            }
+            nextButton.classList.remove("hidden");
+        }
+        
+        nextButton.addEventListener("click", () => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex >= questions.length) {
+                currentQuestionIndex = 0;
+            }
+            loadQuestion();
+            nextButton.classList.add("hidden");
+        });
+        
+        loadQuestion();
+    </script>
+</body>
+</html>
